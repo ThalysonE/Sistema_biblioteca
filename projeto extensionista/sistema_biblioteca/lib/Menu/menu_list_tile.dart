@@ -25,7 +25,7 @@ Widget build(BuildContext context) {
     onTap: () => widget.onTap(),
     child: AnimatedContainer(
       duration: Duration(milliseconds: 180),
-      curve: Curves.easeInOut,
+      curve: Curves.decelerate,
       width: widget.menuAtivado ? 220.0 : 70.0,
       margin: const EdgeInsets.symmetric(horizontal: 8.0),
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -34,23 +34,59 @@ Widget build(BuildContext context) {
       ),
       child: SizedBox(
           width: widget.menuAtivado ? 220.0 : 70.0,
-          child: ListTile(
-            leading: SizedBox(
-              width: 10.0, // Define uma largura fixa para o ícone
-              child: Icon(
-                widget.icon,
-                color: Colors.black54,
+          child: ExpansionTile(
+              leading: SizedBox(
+                width: 10.0,
+                child: Icon(widget.icon)
               ),
-            ),
-            title: widget.menuAtivado
+              trailing: widget.menuAtivado
+                ? SizedBox(
+                  width: 10.0,
+                  child: Icon(Icons.chevron_right),
+                  )
+                  :SizedBox.shrink(),
+              title: widget.menuAtivado
                 ? Text(
                     widget.title,
-                    style: widget.menuAtivado
-                        ? listTitleSelectedTextStyle
-                        : listTitleDefaultTextStyle,
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 13.5,
+                      fontFamily: 'Nunito Sans',
+                    ),
                   )
-                : null,
-          ),
+                : SizedBox.shrink(),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 15),
+                  child: ListTile(
+                    
+                    title: Text('Opção 1',style: TextStyle(fontSize: 12),),
+                    onTap: (){
+                      
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 15),
+                  child: ListTile(
+                    title: Text('Opção 2', style: TextStyle(fontSize: 12),),
+                    onTap: (){
+                  
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 15),
+                  child: ListTile(
+                    title: Text('Opção 3',style: TextStyle(fontSize: 12),),
+                    onTap: (){
+                  
+                    },
+                  ),
+                )
+              ],
+            ),
+          
     ),
     )
   );

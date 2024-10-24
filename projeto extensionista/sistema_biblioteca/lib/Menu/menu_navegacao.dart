@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sistema_biblioteca/Modelos/modelo_menu.dart';
 import 'menu_list_tile.dart';
 import 'package:sistema_biblioteca/theme.dart';
 
@@ -38,41 +39,39 @@ class _MenuNavegacaoState extends State<MenuNavegacao> with SingleTickerProvider
       animation: _animationController,
       builder: (context, child) {
         return Material(
+    
           elevation: 8.0,
           child: Container(
             width: menuAtivado ? maxwidth : minwidth,
             color: drawerBackgroundColor,
             child: Column(
               children: <Widget>[
-                IconButton(
-                  icon: Icon(menuAtivado ? Icons.arrow_back : Icons.menu),
-                  onPressed: toggleMenu,
+                Row(                 
+                  mainAxisAlignment: menuAtivado?MainAxisAlignment.end:MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.menu),
+                      onPressed: toggleMenu,                   
+                    ),
+                  ],
                 ),
-                SizedBox(
-                  height: 60.0,
-                  child: MenuListTile(
-                    title: 'Página Inicial',
-                    icon: Icons.home,
-                    menuAtivado: menuAtivado,
-                    onTap: () {
-                      setState(() {
-                        indexAtual = 0;
-                      });
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: menuitens.length,
+                    itemBuilder: (context, index) {
+                      return MenuListTile(
+                        title: menuitens[index].title,
+                        icon: menuitens[index].icon,
+                        menuAtivado: menuAtivado,
+                        onTap: () {
+                          setState(() {
+                            indexAtual = index;
+                          });
+                        },
+                      );
                     },
-                  ),
-                ),
-                SizedBox(
-                  height: 60.0,
-                  child: MenuListTile(
-                    title: 'Configurações',
-                    icon: Icons.settings,
-                    menuAtivado: menuAtivado,
-                    onTap: () {
-                      setState(() {
-                        indexAtual = 1;
-                      });
-                    },
-                  ),
+                   
+                  ),                
                 ),
               ],
             ),
@@ -81,7 +80,6 @@ class _MenuNavegacaoState extends State<MenuNavegacao> with SingleTickerProvider
       },
     );
   }
-
   @override
   void dispose() {
     _animationController.dispose();
