@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sistema_biblioteca/Modelos/modelo_menu.dart';
-import 'menu_list_tile.dart';
 import 'package:sistema_biblioteca/theme.dart';
 
 class MenuNavegacao extends StatefulWidget {
@@ -9,17 +8,30 @@ class MenuNavegacao extends StatefulWidget {
 }
 
 class _MenuNavegacaoState extends State<MenuNavegacao> with SingleTickerProviderStateMixin {
-  double maxwidth = 220.0;
+  double maxwidth = 225.0;
   double minwidth = 70.0;
   bool menuAtivado = false;
-  int indexAtual = 0;
-
   late AnimationController _animationController;
+  late Animation<double> _widthAnimation;
+  late Animation<double> _scaleAnimation;
+  
+  final Map<int, bool> _isHovered = {};
+  int _selectedIndex = -1;
+  
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(vsync: this, duration: Duration(milliseconds: 180));
+    _animationController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 255),
+    );
+
+    _widthAnimation = Tween<double>(begin: minwidth, end: maxwidth).animate(_animationController);
+
+    _scaleAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut), 
+    );
   }
 
   void toggleMenu() {
@@ -34,52 +46,151 @@ class _MenuNavegacaoState extends State<MenuNavegacao> with SingleTickerProvider
   }
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _animationController,
-      builder: (context, child) {
-        return Material(
-    
-          elevation: 8.0,
-          child: Container(
-            width: menuAtivado ? maxwidth : minwidth,
-            color: drawerBackgroundColor,
-            child: Column(
-              children: <Widget>[
-                Row(                 
-                  mainAxisAlignment: menuAtivado?MainAxisAlignment.end:MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.menu),
-                      onPressed: toggleMenu,                   
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: menuitens.length,
-                    itemBuilder: (context, index) {
-                      return MenuListTile(
-                        title: menuitens[index].title,
-                        icon: menuitens[index].icon,
-                        menuAtivado: menuAtivado,
-                        onTap: () {
-                          setState(() {
-                            indexAtual = index;
-                          });
+Widget build(BuildContext context) {
+  return AnimatedBuilder(
+    animation: _widthAnimation,
+    builder: (context, child) {
+      return Material(
+        elevation: 8.0,
+        child: Container(
+          width: _widthAnimation.value,
+          color: drawerBackgroundColor,
+          child: Column(
+            children: <Widget>[
+              Row(
+                mainAxisAlignment: menuAtivado?MainAxisAlignment.end:MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.menu),
+                    onPressed: toggleMenu,
+                  ),
+                ],
+              ),
+              Expanded(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      _buildHoverableListTile(0, Icons.home, 'Início'),
+                      _buildHoverableListTile(1, Icons.search, 'Pesquisa Exemplar'),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: menuitens.length,
+                        itemBuilder: (context, index) {
+                          return ExpansionTile(
+                            tilePadding: EdgeInsets.fromLTRB(22, 4, 5, 4),
+                            leading: Icon(menuitens[index].icon),
+                            backgroundColor: const Color.fromRGBO(233, 235, 238, 75),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              
+                            ),
+                            iconColor: const Color.fromARGB(255, 10, 10, 12),
+                            textColor: Colors.black,
+                            collapsedTextColor: Colors.black87,
+                            onExpansionChanged: (value) {
+                              
+                            },
+                            title: menuAtivado
+                                ? ScaleTransition(
+                                    scale: _scaleAnimation,
+                                    child: FadeTransition(
+                                      opacity: _animationController,
+                                      child: Text(
+                                        menuitens[index].title,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontFamily: 'Nunito Sans',
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : SizedBox.shrink(),
+                            showTrailingIcon: menuAtivado? true: false,
+                            children: menuAtivado?[
+                              for (String item in menuSubItens[index])
+                                ListTile(
+                                  contentPadding: EdgeInsets.only(left: 50),
+                                  title: Text(
+                                    item,
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                            ]:[],
+                          );
                         },
-                      );
-                    },
-                   
-                  ),                
-                ),
-              ],
-            ),
+                      ),
+                      _buildHoverableListTile(100, Icons.settings, 'Configurações'),
+                      _buildHoverableListTile(101, Icons.exit_to_app, 'Sair') 
+                    ],
+                  ),
+                
+              ),
+            /*
+              Column(
+                children: [
+                   _buildHoverableListTile(100, Icons.settings, 'Configurações'),
+                    _buildHoverableListTile(101, Icons.exit_to_app, 'Sair') 
+                ],
+              ),
+              */
+            ],
           ),
-        );
+        ),
+      );
+    },
+  );
+}
+Widget _buildHoverableListTile(int index, IconData icon, String title, {bool isSubItem = false}) {
+    return MouseRegion(
+      onEnter: (_) {
+        setState(() {
+          _isHovered[index] = true;
+        });
       },
+      onExit: (_) {
+        setState(() {
+          _isHovered[index] = false;
+        });
+      },
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        child: Container(
+          color: _selectedIndex == index
+              ?  const Color.fromRGBO(233, 235, 238, 75)
+              : _isHovered[index] == true
+                  ? const Color.fromRGBO(233, 235, 238, 75) 
+                  : Colors.transparent,
+          child: ListTile(
+            contentPadding: isSubItem ? EdgeInsets.only(left: 50) : EdgeInsets.fromLTRB(22, 2.5, 5, 2.5),
+            leading: Icon(icon, color: Colors.black87),
+            title: menuAtivado
+                ? ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: FadeTransition(
+                      opacity: _animationController,
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          color: Colors.black87,
+                          fontSize: isSubItem ? 12 : 13,
+                          fontFamily: 'Nunito Sans',
+                        ),
+                      ),
+                    ),
+                  )
+                : null,
+          ),
+        ),
+      ),
     );
   }
+
+
   @override
   void dispose() {
     _animationController.dispose();
