@@ -13,11 +13,13 @@ class _MenuNavegacaoState extends State<MenuNavegacao> with SingleTickerProvider
   bool menuAtivado = false;
   late AnimationController _animationController;
   late Animation<double> _widthAnimation;
-  late Animation<double> _scaleAnimation;
-  
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+
   final Map<int, bool> _isHovered = {};
-  int _selectedIndex = -1;
-  
+
+  int _selectedIndex = -1; 
+  int _expandedIndex = -1; 
 
   @override
   void initState() {
@@ -29,9 +31,11 @@ class _MenuNavegacaoState extends State<MenuNavegacao> with SingleTickerProvider
 
     _widthAnimation = Tween<double>(begin: minwidth, end: maxwidth).animate(_animationController);
 
-    _scaleAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut), 
-    );
+    _slideAnimation = Tween<Offset>(begin: Offset(-0.4, 0), end: Offset(0, 0))
+        .animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
+
+    _fadeAnimation = Tween<double>(begin: -10, end: 1)
+        .animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
   }
 
   void toggleMenu() {
@@ -46,56 +50,66 @@ class _MenuNavegacaoState extends State<MenuNavegacao> with SingleTickerProvider
   }
 
   @override
-Widget build(BuildContext context) {
-  return AnimatedBuilder(
-    animation: _widthAnimation,
-    builder: (context, child) {
-      return Material(
-        elevation: 8.0,
-        child: Container(
-          width: _widthAnimation.value,
-          color: drawerBackgroundColor,
-          child: Column(
-            children: <Widget>[
-              Row(
-                mainAxisAlignment: menuAtivado?MainAxisAlignment.end:MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.menu),
-                    onPressed: toggleMenu,
-                  ),
-                ],
-              ),
-              Expanded(
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _widthAnimation,
+      builder: (context, child) {
+        return Material(
+          elevation: 8.0,
+          child: Container(
+            width: _widthAnimation.value,
+            color: drawerBackgroundColor,
+            child: Column(
+              children: <Widget>[
+                Row(
+                  mainAxisAlignment: menuAtivado ? MainAxisAlignment.end : MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.menu),
+                      onPressed: toggleMenu,
+                    ),
+                  ],
+                ),
+                Expanded(
                   child: ListView(
                     shrinkWrap: true,
                     children: [
-                      _buildHoverableListTile(0, Icons.home, 'Início'),
-                      _buildHoverableListTile(1, Icons.search, 'Pesquisa Exemplar'),
+                      _buildListTile(0, Icons.home, 'Início'),
+                      _buildListTile(1, Icons.search, 'Pesquisa Exemplar'),
                       ListView.builder(
                         shrinkWrap: true,
                         physics: NeverScrollableScrollPhysics(),
                         itemCount: menuitens.length,
                         itemBuilder: (context, index) {
+                          int expansionTileIndex = 1000 + index; 
                           return ExpansionTile(
                             tilePadding: EdgeInsets.fromLTRB(22, 4, 5, 4),
                             leading: Icon(menuitens[index].icon),
-                            backgroundColor: const Color.fromRGBO(233, 235, 238, 75),
+                            backgroundColor: _selectedIndex == expansionTileIndex
+                                ? const Color.fromRGBO(233, 235, 238, 75)
+                                : Colors.transparent,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              
+                              borderRadius: BorderRadius.circular(11),
                             ),
                             iconColor: const Color.fromARGB(255, 10, 10, 12),
                             textColor: Colors.black,
                             collapsedTextColor: Colors.black87,
-                            onExpansionChanged: (value) {
-                              
+                            onExpansionChanged: (isExpanded) {
+                              setState(() {
+                                if (isExpanded) {
+                                  _expandedIndex = index;
+                                } else {
+                                  _expandedIndex = -1;
+                                }
+                                _selectedIndex = isExpanded ? expansionTileIndex : -1;
+                              });
                             },
+                            initiallyExpanded: _expandedIndex == index,
                             title: menuAtivado
-                                ? ScaleTransition(
-                                    scale: _scaleAnimation,
+                                ? SlideTransition(
+                                    position: _slideAnimation,
                                     child: FadeTransition(
-                                      opacity: _animationController,
+                                      opacity: _fadeAnimation,
                                       child: Text(
                                         menuitens[index].title,
                                         style: TextStyle(
@@ -106,42 +120,36 @@ Widget build(BuildContext context) {
                                     ),
                                   )
                                 : SizedBox.shrink(),
-                            showTrailingIcon: menuAtivado? true: false,
-                            children: menuAtivado?[
-                              for (String item in menuSubItens[index])
-                                ListTile(
-                                  contentPadding: EdgeInsets.only(left: 50),
-                                  title: Text(
-                                    item,
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                ),
-                            ]:[],
+                            showTrailingIcon: menuAtivado,
+                            children: menuAtivado
+                                ? [
+                                    for (String item in menuSubItens[index])
+                                      ListTile(
+                                        contentPadding: EdgeInsets.only(left: 50),
+                                        title: Text(
+                                          item,
+                                          style: TextStyle(fontSize: 12),
+                                        ),
+                                      ),
+                                  ]
+                                : [],
                           );
                         },
                       ),
-                      _buildHoverableListTile(100, Icons.settings, 'Configurações'),
-                      _buildHoverableListTile(101, Icons.exit_to_app, 'Sair') 
+                      _buildListTile(100, Icons.settings, 'Configurações'),
+                      _buildListTile(101, Icons.exit_to_app, 'Sair'),
                     ],
                   ),
-                
-              ),
-            /*
-              Column(
-                children: [
-                   _buildHoverableListTile(100, Icons.settings, 'Configurações'),
-                    _buildHoverableListTile(101, Icons.exit_to_app, 'Sair') 
-                ],
-              ),
-              */
-            ],
+                ),
+              ],
+            ),
           ),
-        ),
-      );
-    },
-  );
-}
-Widget _buildHoverableListTile(int index, IconData icon, String title, {bool isSubItem = false}) {
+        );
+      },
+    );
+  }
+
+  Widget _buildListTile(int index, IconData icon, String title, {bool isSubItem = false}) {
     return MouseRegion(
       onEnter: (_) {
         setState(() {
@@ -157,22 +165,23 @@ Widget _buildHoverableListTile(int index, IconData icon, String title, {bool isS
         onTap: () {
           setState(() {
             _selectedIndex = index;
+            _expandedIndex = -1; 
           });
         },
         child: Container(
           color: _selectedIndex == index
-              ?  const Color.fromRGBO(233, 235, 238, 75)
+              ? const Color.fromRGBO(233, 235, 238, 75) 
               : _isHovered[index] == true
-                  ? const Color.fromRGBO(233, 235, 238, 75) 
+                  ? const Color.fromRGBO(233, 235, 238, 50) 
                   : Colors.transparent,
           child: ListTile(
             contentPadding: isSubItem ? EdgeInsets.only(left: 50) : EdgeInsets.fromLTRB(22, 2.5, 5, 2.5),
             leading: Icon(icon, color: Colors.black87),
             title: menuAtivado
-                ? ScaleTransition(
-                    scale: _scaleAnimation,
+                ? SlideTransition(
+                    position: _slideAnimation,
                     child: FadeTransition(
-                      opacity: _animationController,
+                      opacity: _fadeAnimation,
                       child: Text(
                         title,
                         style: TextStyle(
@@ -189,7 +198,6 @@ Widget _buildHoverableListTile(int index, IconData icon, String title, {bool isS
       ),
     );
   }
-
 
   @override
   void dispose() {
