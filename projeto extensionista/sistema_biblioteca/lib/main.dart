@@ -15,6 +15,7 @@ class Myapp extends StatelessWidget {
     return MaterialApp(
       theme:ThemeData(
         primarySwatch: Colors.red,
+        fontFamily: 'Roboto'
       ),
       home: PaginaIncial(),
     );

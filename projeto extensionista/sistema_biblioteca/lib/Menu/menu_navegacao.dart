@@ -91,8 +91,8 @@ class _MenuNavegacaoState extends State<MenuNavegacao> with SingleTickerProvider
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(11),
                             ),
-                            iconColor: const Color.fromARGB(255, 10, 10, 12),
-                            textColor: Colors.black,
+                            iconColor: selectedColor,
+                            textColor: selectedColor,
                             collapsedTextColor: Colors.black87,
                             onExpansionChanged: (isExpanded) {
                               setState(() {
@@ -114,21 +114,24 @@ class _MenuNavegacaoState extends State<MenuNavegacao> with SingleTickerProvider
                                         menuitens[index].title,
                                         style: TextStyle(
                                           fontSize: 13,
-                                          fontFamily: 'Nunito Sans',
+                                          fontWeight: FontWeight.w400
                                         ),
                                       ),
                                     ),
                                   )
                                 : SizedBox.shrink(),
                             showTrailingIcon: menuAtivado,
+                            
                             children: menuAtivado
                                 ? [
                                     for (String item in menuSubItens[index])
                                       ListTile(
-                                        contentPadding: EdgeInsets.only(left: 50),
+                                        contentPadding: EdgeInsets.only(left: 60),
                                         title: Text(
                                           item,
-                                          style: TextStyle(fontSize: 12),
+                                          style: TextStyle(fontSize: 12.3),
+
+                                          
                                         ),
                                       ),
                                   ]
@@ -187,7 +190,6 @@ class _MenuNavegacaoState extends State<MenuNavegacao> with SingleTickerProvider
                         style: TextStyle(
                           color: Colors.black87,
                           fontSize: isSubItem ? 12 : 13,
-                          fontFamily: 'Nunito Sans',
                         ),
                       ),
                     ),
